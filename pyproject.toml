@@ -1,0 +1,22 @@
+[project]
+name = "norsk-parakeet"
+version = "0.1.0"
+description = "Norwegian speech recognition: Parakeet TDT (moondream/parakeet-ultra) fine-tuned on open Norwegian data"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+    # Data packing, text normalization and WER scoring, so results compare 1:1 with norsk-asr.
+    "norsk-asr @ git+https://github.com/ahdrage/norsk-asr@1d3b1d7",
+    "torch>=2.14",
+    "transformers>=5.21",
+    "numpy>=2.1",
+]
+
+[build-system]
+requires = ["setuptools>=70"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

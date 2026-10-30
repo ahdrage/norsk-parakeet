@@ -1,0 +1,9 @@
+data/
+runs/
+results/*/*.jsonl
+*.log
+.venv/
+__pycache__/
+*.egg-info/
+results/nbtale/
+results/nbeval/
