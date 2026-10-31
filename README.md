@@ -76,6 +76,11 @@ with torch.no_grad():
 print(processor.batch_decode(out.sequences, skip_special_tokens=True)[0])
 ```
 
+For audio longer than ~30 s, `norsk_parakeet.long_audio.transcribe_long(processor, model, audio)` cuts
+at pauses into chunks of up to 30 s. On 10 h of held-out whole recordings, WER was 11.0 with these
+cuts, 11.5 with fixed 30 s cuts and 14.0 with fixed 15 s cuts, where a cut in the middle of speech can
+also make the model run away. Chunks much longer than 30 s loop more often.
+
 ## How it is trained
 
 - **Targets:** the original transcripts, cased and punctuated (NPSC's `<ee>`-style markers
