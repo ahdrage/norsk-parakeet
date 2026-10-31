@@ -20,7 +20,7 @@ stage() { echo "$(date -Is) == $*"; }
 if [ ! -f data/bc/train/PACKED ]; then
   stage pack
   $py -m norsk_parakeet.broadcast pack --episodes data/bc/episodes.raw --out data/bc/train \
-    --test-out data/eval/broadcast_test --max-hours 450 --workers 8 | tee data/bc/pack.log
+    --test-out data/eval/broadcast_test --max-hours "${MAX_HOURS:?}" --workers 8 | tee data/bc/pack.log
   grep -q '^TOTAL' data/bc/pack.log && date -Is > data/bc/train/PACKED
 fi
 
@@ -61,7 +61,7 @@ if [ ! -f data/bc/mix/READY ]; then
   for f in data/bc/filtered/bc_*.jsonl; do
     ln -s "$PWD/$f" data/bc/mix/; ln -s "$PWD/${f%.jsonl}.i16" data/bc/mix/
   done
-  # 200 of the 1,304 original shards (~260 h), chosen by hash, so the model keeps what it knows.
+  # Part of the original shards, chosen by hash, so the model keeps what it knows.
   for f in $(for g in data/train/*.jsonl; do echo "$(echo "$g" | md5sum | cut -c1-8) $g"; done | sort | head -200 | cut -d' ' -f2); do
     ln -s "$PWD/$f" data/bc/mix/; ln -s "$PWD/${f%.jsonl}.i16" data/bc/mix/
   done

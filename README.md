@@ -10,12 +10,14 @@ tokenizer already has æ, ø, å and common Norwegian words, so no vocabulary ch
 unlike norsk-asr it writes cased, punctuated text.
 
 Weights: [ahdrage/norsk-parakeet](https://huggingface.co/ahdrage/norsk-parakeet) on Hugging Face
-(CC-BY-4.0), trained on about 2,000 hours of Norwegian speech in two stages:
+(CC-BY-4.0), trained on about 2,400 hours of Norwegian speech in two stages:
 
 - **v1** (tag `v1`): one epoch over 1,679 h of open data, about 18 hours on one RTX PRO 4000
   Blackwell (24 GB).
-- **v2** (current): v1 continued on additional Norwegian speech, about 2,000 h in total. Better
-  on every test set, but see [known issue](#known-issue-in-v2).
+- **v3** (current): v1 continued on additional Norwegian speech, about 2,400 h in total. At least
+  as good as v2 on every test set, without [v2's runaway output](#runaway-output).
+- **v2** (tag `v2`): an earlier continuation of v1, about 2,000 h in total. It sometimes keeps
+  writing after the speech ends; use v3 instead.
 
 ## Results
 
@@ -28,15 +30,16 @@ WER (%) on digit-free utterances, scored with norsk-asr's `normalize()` (lowerca
 | norsk-asr `full_top1` + 4-gram LM | 1,680 h | 10.0 | 9.7 | 5.6 | 12.2 |
 | parakeet-ultra, zero-shot | – | 64.3 | 71.8 | 67.1 | 74.7 |
 | norsk-parakeet v1, greedy | 1,680 h | 8.1 | 7.6 | 4.6 | 11.2 |
-| **norsk-parakeet v2**, greedy | ~2,000 h | 6.7 | **7.1** | 4.4 | 11.0 |
+| norsk-parakeet v2, greedy | ~2,000 h | 6.7 | 7.1 | 4.4 | 11.0 |
+| **norsk-parakeet v3**, greedy | ~2,400 h | 6.2 | **7.1** | 4.2 | 10.9 |
 
 All rows use the same test subsets: 1,000 utterances of NPSC and NST, all of FLEURS (357) and of
-Stortinget validation (697). norsk-parakeet decodes greedily with no language model; v2's
-character error rates are 2.6 / 2.6 / 1.2 / 7.2%.
+Stortinget validation (697). norsk-parakeet decodes greedily with no language model; v3's
+character error rates are 2.1 / 2.7 / 1.1 / 7.2%.
 
 It beats norsk-asr with its language model on all four sets, and NB-Whisper large on NPSC, the
 set closest to spontaneous parliamentary speech, at 0.6B parameters against 1.55B. NB-Whisper,
-trained on about 40 times as much audio, is still ahead on read speech (FLEURS, NST) and
+trained on over 25 times as much audio, is still ahead on read speech (FLEURS, NST) and
 Stortinget.
 
 Zero-shot, the model hears Norwegian well but spells it as Swedish ("I följde sysselmanns
@@ -44,14 +47,19 @@ kontor", "för exempel"). A few hundred steps of fine-tuning fix most of that; t
 gain comes slowly over the epoch (see [PROGRESS.md](PROGRESS.md) for the curve). Inference runs at
 480–810× real time on this card.
 
-### Known issue in v2
+On 2,126 held-out clips from recordings of the kind added after v1, scored against their
+transcripts, WER is 18.1 for v1, 16.9 for v2 and 9.2 for v3.
 
-On roughly 1% of clips v2 keeps writing after the speech has ended, inventing plausible words
-and sometimes repeating a short phrase many times (v1: about 0.25%). It comes from training
-clips whose transcripts extend past the audio at their edges; a fixed
-version (v3) is being trained from v1.
-Until then, treat output of more than ~6 words per second of audio as suspect, or load v1 with
-`revision="v1"`.
+### Runaway output
+
+v2 sometimes keeps writing after the speech has ended, inventing plausible words and repeating a
+short phrase many times. It came from training clips whose transcripts extend past the audio at
+their edges, so v3 was retrained from v1 without such clips. On 3,571 held-out clips:
+
+| | v1 | v2 | v3 |
+|---|---|---|---|
+| Clips repeating a phrase | 3 | 20 | **2** |
+| Fastest output (words per second of audio) | 97 | 128 | **7** |
 
 ## Usage
 
@@ -92,6 +100,9 @@ print(processor.batch_decode(out.sequences, skip_special_tokens=True)[0])
   up to 25 s at sentence boundaries; `norsk_parakeet.filter` leaves out clips whose transcript
   disagrees strongly with v1's output; `scripts/run_bc.sh` runs packing, filtering and one epoch
   at LR 3e-5 from v1.
+- **Stage 2 again (v3):** clips are cut in the middle of the pause between sentences, and clips
+  with CER above 30% against v1's output, or whose first or last words v1 does not hear, are left
+  out. `scripts/run_v3.sh` runs packing and one epoch at LR 3e-5 from v1 (79,323 steps).
 - **Resumable:** a checkpoint (weights, optimizer, batch position) every 30 minutes; a restart
   continues with the same batch order.
 

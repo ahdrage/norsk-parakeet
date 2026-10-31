@@ -109,3 +109,18 @@ embedding service, so training is capped at 60% of GPU memory.
   to write words with no audio under them. Next run (v3): cut in the middle of the pause between
   sentences, leave out clips whose edges v1 does not hear or whose CER is above 30%, start again
   from v1, and track the runaway count (v1: 9 of 3,571) as its own metric.
+
+## 31 Oct 2026: v3
+
+- Trained from v1, not v2, on new clips mixed with part of the v1 data, about 2,400 h of training
+  data in total: 79,323 steps at LR 3e-5, with clips filtered as planned above.
+- Final WER, FLEURS / NPSC / NST / Stortinget: v2 6.7 / 7.1 / 4.4 / 11.0, v3 6.2 / 7.1 / 4.2 / 10.9.
+  On the aligned part of the held-out test set (2,126 clips, none excluded), WER against its
+  transcripts: v1 18.1, v2 16.9, v3 9.2.
+- **Runaway count, v1 / v2 / v3:** 9 / 33 / 19 of 3,571 clips. The metric turned out to be a poor
+  one: it compares output length with the transcript, so it also fires on recordings shifted
+  against their timestamps, where the model correctly writes other words than the transcript.
+  v3 has none on the aligned clips (v1 0, v2 4), and the 19 read as ordinary speech.
+- Better measures on the same clips: repeated phrases (a three-word sequence five or more times)
+  3 / 20 / 2, where one of v3's two is a speaker really repeating a word; fastest output 97 / 128 / 7
+  words per second. The regression is gone.

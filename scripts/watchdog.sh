@@ -16,3 +16,4 @@ check() {
 }
 check parakeet-train runs/full/log.jsonl
 check parakeet-bc runs/bc1/log.jsonl
+check parakeet-v3 runs/v3/log.jsonl

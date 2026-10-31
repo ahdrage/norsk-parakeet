@@ -101,7 +101,7 @@ def cut(wav: np.ndarray, clip: dict) -> np.ndarray:
 # --- Packing into norsk-asr's shard format -------------------------------------------------------
 #
 #     python -m norsk_parakeet.broadcast pack --episodes data/bc/episodes.raw --out data/bc/train \
-#         --test-out data/eval/broadcast_test --max-hours 450
+#         --test-out data/eval/broadcast_test --max-hours 100
 #
 # Episodes come from a JSON-lines export (one object per line: id, prov, show, dur, url, segs).
 # A fixed set of episodes, one per show from different shows, is held out as a test set; the rest
