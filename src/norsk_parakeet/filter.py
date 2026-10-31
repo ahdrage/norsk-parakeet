@@ -8,7 +8,7 @@ against the transcript are left out. Misaligned clips sit around 75% CER, aligne
 so a loose threshold drops the misaligned ones and keeps clips that are merely hard (dialect,
 crosstalk), which are what the model should learn from.
 
-    python -m norsk_parakeet.filter --model runs/full/final --src data/bc/train --out data/bc/filtered
+    python -m norsk_parakeet.filter --model runs/full/final --src data/stage2/train --out data/stage2/filtered
 
 Writes <out>/<shard>.jsonl with the kept rows (and their "cer") next to a symlink to the shard's
 .i16, so <out> is a PackedSet directory. Restartable per shard.

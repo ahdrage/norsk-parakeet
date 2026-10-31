@@ -96,9 +96,9 @@ print(processor.batch_decode(out.sequences, skip_special_tokens=True)[0])
   For a batch of two 30 s clips that is 1.8 ms against 2.2 s for the PyTorch loop, and training
   runs at 0.026 audio-h/s instead of 0.0135. `tests/test_loss.py` checks the gradients against
   autograd (equal to 1e-15) and the kernels against the PyTorch recursion.
-- **Stage 2 (v2):** `norsk_parakeet.broadcast` cuts long, timestamped recordings into clips of
+- **Stage 2 (v2):** `norsk_parakeet.recordings` cuts long, timestamped recordings into clips of
   up to 25 s at sentence boundaries; `norsk_parakeet.filter` leaves out clips whose transcript
-  disagrees strongly with v1's output; `scripts/run_bc.sh` runs packing, filtering and one epoch
+  disagrees strongly with v1's output; `scripts/run_v2.sh` runs packing, filtering and one epoch
   at LR 3e-5 from v1.
 - **Stage 2 again (v3):** clips are cut in the middle of the pause between sentences, and clips
   with CER above 30% against v1's output, or whose first or last words v1 does not hear, are left

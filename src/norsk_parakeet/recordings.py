@@ -100,8 +100,8 @@ def cut(wav: np.ndarray, clip: dict) -> np.ndarray:
 
 # --- Packing into norsk-asr's shard format -------------------------------------------------------
 #
-#     python -m norsk_parakeet.broadcast pack --episodes data/bc/episodes.raw --out data/bc/train \
-#         --test-out data/eval/broadcast_test --max-hours 100
+#     python -m norsk_parakeet.recordings pack --episodes data/stage2/episodes.raw --out data/stage2/train \
+#         --test-out data/eval/recordings_test --max-hours 100
 #
 # Episodes come from a JSON-lines export (one object per line: id, prov, show, dur, url, segs).
 # A fixed set of episodes, one per show from different shows, is held out as a test set; the rest
@@ -285,11 +285,11 @@ def cmd_pack(a):
         print(f"TEST {len(rows)} clips, {sum(len(p) for _, p in rows) / SR / 3600:.1f} h from {len(test_ids)} episodes",
               flush=True)
 
-    hours = sum(json.loads(l)["n"] for p in out.glob("bc_*.jsonl") for l in open(p)) / SR / 3600
+    hours = sum(json.loads(l)["n"] for p in out.glob("rec_*.jsonl") for l in open(p)) / SR / 3600
     # Interleave sources and shows so a --max-hours cut still covers all of them.
     todo = [e for e in eps if e["id"] not in test_ids and e["id"] not in done]
     todo.sort(key=lambda e: hashlib.md5(e["id"].encode()).hexdigest())
-    writer = _ShardWriter(out, "bc")
+    writer = _ShardWriter(out, "rec")
     pending, t0, failed, cut_h = [], time.time(), 0, 0.0
     with Pool(a.workers) as pool, open(done_file, "a") as fd:
         check = _Checker(a.filter_model, a.max_cer) if a.filter_model else None  # after forking the workers

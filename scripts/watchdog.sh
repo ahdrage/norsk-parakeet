@@ -15,5 +15,5 @@ check() {
   echo "$(date -Is) $unit $state | $last" >> watchdog.log
 }
 check parakeet-train runs/full/log.jsonl
-check parakeet-bc runs/bc1/log.jsonl
+check parakeet-v2 runs/v2/log.jsonl
 check parakeet-v3 runs/v3/log.jsonl
