@@ -19,13 +19,20 @@ Weights: [ahdrage/norsk-parakeet](https://huggingface.co/ahdrage/norsk-parakeet)
 - **v2** (tag `v2`): an earlier continuation of v1, about 2,000 h in total. It sometimes keeps
   writing after the speech ends; use v3 instead.
 
+## Known issue: numbers glued to the word before
+
+v3 often writes "september2017" for "september 2017". The tokenizer loses the word boundary before a
+word that starts with a digit, so the training labels lost it too. Word scores are not affected, since
+scoring spaces numbers out. Until a model trained with corrected labels is out, use
+`norsk_parakeet.long_audio.fix_number_spacing`, which `transcribe_long` already applies.
+
 ## Results
 
 WER (%) on digit-free utterances, scored with norsk-asr's `normalize()` (lowercase, no punctuation).
 
 | Model | Training data | FLEURS | NPSC | NST | Stortinget |
 |---|---|---|---|---|---|
-| NB-Whisper large | ~66k h | **4.2** | 16.5 | **2.0** | **9.0** |
+| NB-Whisper large | see its paper | **4.2** | 16.5 | **2.0** | **9.0** |
 | norsk-asr `full_top1`, greedy | 1,680 h | 15.2 | 12.9 | 8.9 | 15.3 |
 | norsk-asr `full_top1` + 4-gram LM | 1,680 h | 10.0 | 9.7 | 5.6 | 12.2 |
 | parakeet-ultra, zero-shot | – | 64.3 | 71.8 | 67.1 | 74.7 |
@@ -38,9 +45,8 @@ Stortinget validation (697). norsk-parakeet decodes greedily with no language mo
 character error rates are 2.1 / 2.7 / 1.1 / 7.2%.
 
 It beats norsk-asr with its language model on all four sets, and NB-Whisper large on NPSC, the
-set closest to spontaneous parliamentary speech, at 0.6B parameters against 1.55B. NB-Whisper,
-trained on over 25 times as much audio, is still ahead on read speech (FLEURS, NST) and
-Stortinget.
+set closest to spontaneous parliamentary speech, at 0.6B parameters against 1.55B. NB-Whisper
+is still ahead on read speech (FLEURS, NST) and Stortinget.
 
 Zero-shot, the model hears Norwegian well but spells it as Swedish ("I följde sysselmanns
 kontor", "för exempel"). A few hundred steps of fine-tuning fix most of that; the rest of the
@@ -89,8 +95,9 @@ also make the model run away. Chunks much longer than 30 s loop more often.
   `prep train` command: digit-free utterances with whisper WER ≤ 0.15. Clips over 30 s, and ~0.1%
   whose transcripts cannot fit their audio (over 30 or under 2 characters per second), are left out.
 - **Everything trains:** all 0.6B parameters, AdamW, peak LR 5e-5, cosine decay, 64 s of audio per
-  batch, bf16 autocast. BatchNorm keeps its pretrained statistics and layer-drop is off: with
-  small batches, batch statistics blew the loss up from ~5 to ~3,000.
+  batch, bf16 autocast. BatchNorm keeps its pretrained statistics: with small batches, batch
+  statistics blew the loss up from ~5 to ~3,000. Layer-drop was meant to be off, but the setting had no
+  effect until a restart, so it stayed on for v1's first 37,514 steps; v2 and v3 ran without it.
 - **Memory-lean TDT loss** (`src/norsk_parakeet/loss.py`). transformers' TDT loss materializes
   the joint output (frames × tokens × 8,193) in float32 several times and runs out of memory on a
   24 GB card at useful batch sizes. The loss here computes the joint in time chunks under

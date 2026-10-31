@@ -4,6 +4,8 @@ Whole-recording WER on 10 h of held-out audio: 11.0 with these cuts, 11.5 with f
 with fixed 15 s cuts. Chunks much longer than the 25-30 s the model was trained on loop more often.
 """
 
+import re
+
 import numpy as np
 import torch
 
@@ -26,6 +28,12 @@ def split_at_pauses(wav: np.ndarray, max_s: float = 30.0) -> list[np.ndarray]:
     return chunks
 
 
+def fix_number_spacing(text: str) -> str:
+    """Put back the space before a number: "september2017" -> "september 2017". Words that end in a
+    capital, such as CO2 and G20, keep their form."""
+    return re.sub(r"(?<=[a-zæøåéèêóòôüäö])(?=\d)|(?<=[^\d\s][,;:])(?=\d)", " ", text)
+
+
 @torch.no_grad()
 def transcribe_long(processor, model, wav: np.ndarray, batch_size: int = 8) -> str:
     """wav: 16 kHz mono float32."""
@@ -34,4 +42,4 @@ def transcribe_long(processor, model, wav: np.ndarray, batch_size: int = 8) -> s
     for i in range(0, len(chunks), batch_size):
         inputs = processor(chunks[i:i + batch_size], sampling_rate=SR, return_tensors="pt").to(model.device)
         out += processor.batch_decode(model.generate(**inputs).sequences, skip_special_tokens=True)
-    return " ".join(t.strip() for t in out)
+    return fix_number_spacing(" ".join(t.strip() for t in out))

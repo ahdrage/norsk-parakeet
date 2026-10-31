@@ -16,7 +16,8 @@ embedding service, so training is capped at 60% of GPU memory.
   duration log-probs (same loss to 7 digits on a test batch). Peak 13 GB at 80 s of audio per batch.
 - **Loss of ~3,000 in training mode** on a 3-utterance batch, ~5 in eval mode: BatchNorm in the
   conformer convolutions uses batch statistics. Keeping BatchNorm in eval mode during training
-  fixes it; layer-drop (0.1 in the config) is also off.
+  fixes it. Layer-drop (0.1 in the config) was meant to be off too, but setting the config had no
+  effect on the built encoder, so it stayed on until the restart at step 37,514.
 - **Pilot:** 155 h (30 Stortinget, 15 NST shards, all NPSC train), 80 s batches, LR 5e-5. Mid-run
   WER on 300-utterance subsets, FLEURS / NPSC / NST / Stortinget:
   - step 500: 25.2 / 27.4 / 24.3 / 35.3

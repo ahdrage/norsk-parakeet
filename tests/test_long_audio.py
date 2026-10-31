@@ -1,6 +1,6 @@
 import numpy as np
 
-from norsk_parakeet.long_audio import SR, split_at_pauses
+from norsk_parakeet.long_audio import SR, fix_number_spacing, split_at_pauses
 
 
 def test_short_audio_is_one_chunk():
@@ -22,3 +22,8 @@ def test_cuts_fall_in_silence():
     wav[25 * SR:26 * SR] = 0
     first = split_at_pauses(wav)[0]
     assert 25 * SR <= len(first) <= 26 * SR
+
+
+def test_fix_number_spacing():
+    assert fix_number_spacing("i september2017 og cirka400 kr") == "i september 2017 og cirka 400 kr"
+    assert fix_number_spacing("CO2 og G20, 10,5 prosent, 1 000") == "CO2 og G20, 10,5 prosent, 1 000"
